@@ -1,5 +1,5 @@
 /**
-* The `Matter.Runner` module is an optional utility which provides a game loop, 
+* The `Matter.Runner` module is an optional utility which provides a game loop,
 * that handles continuously updating a `Matter.Engine` for you within a browser.
 * It is intended for development and debugging purposes, but may also be suitable for simple games.
 * If you are using your own game loop instead, then you do not need the `Matter.Runner` module.
@@ -23,20 +23,20 @@ var Common = require('./Common');
     var _requestAnimationFrame,
         _cancelAnimationFrame;
 
-    if (typeof window !== 'undefined') {
-        _requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame
-                                      || window.mozRequestAnimationFrame || window.msRequestAnimationFrame;
-   
-        _cancelAnimationFrame = window.cancelAnimationFrame || window.mozCancelAnimationFrame 
-                                      || window.webkitCancelAnimationFrame || window.msCancelAnimationFrame;
+    if (typeof global !== 'undefined') {
+        _requestAnimationFrame = global.requestAnimationFrame || global.webkitRequestAnimationFrame
+                                      || global.mozRequestAnimationFrame || global.msRequestAnimationFrame;
+
+        _cancelAnimationFrame = global.cancelAnimationFrame || global.mozCancelAnimationFrame
+                                      || global.webkitCancelAnimationFrame || global.msCancelAnimationFrame;
     }
 
     if (!_requestAnimationFrame) {
         var _frameTimeout;
 
-        _requestAnimationFrame = function(callback){ 
-            _frameTimeout = setTimeout(function() { 
-                callback(Common.now()); 
+        _requestAnimationFrame = function(callback){
+            _frameTimeout = setTimeout(function() {
+                callback(Common.now());
             }, 1000 / 60);
         };
 
@@ -133,7 +133,7 @@ var Common = require('./Common');
             runner.deltaHistory.push(delta);
             runner.deltaHistory = runner.deltaHistory.slice(-runner.deltaSampleSize);
             delta = Math.min.apply(null, runner.deltaHistory);
-            
+
             // limit delta
             delta = delta < runner.deltaMin ? runner.deltaMin : delta;
             delta = delta > runner.deltaMax ? runner.deltaMax : delta;
@@ -167,7 +167,7 @@ var Common = require('./Common');
         Events.trigger(engine, 'tick', event); // @deprecated
 
         // if world has been modified, clear the render scene graph
-        if (engine.world.isModified 
+        if (engine.world.isModified
             && engine.render
             && engine.render.controller
             && engine.render.controller.clear) {

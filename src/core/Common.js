@@ -176,13 +176,13 @@ module.exports = Common;
      * @param {object} obj
      * @return {boolean} True if the object is a HTMLElement, otherwise false
      */
-    Common.isElement = function(obj) {
-        if (typeof HTMLElement !== 'undefined') {
-            return obj instanceof HTMLElement;
-        }
+    // Common.isElement = function(obj) {
+    //     if (typeof HTMLElement !== 'undefined') {
+    //         return obj instanceof HTMLElement;
+    //     }
 
-        return !!(obj && obj.nodeType && obj.nodeName);
-    };
+    //     return !!(obj && obj.nodeType && obj.nodeName);
+    // };
 
     /**
      * Returns true if the object is an array.

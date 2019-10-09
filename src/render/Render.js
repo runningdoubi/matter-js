@@ -22,14 +22,13 @@ var Mouse = require('../core/Mouse');
 
     var _requestAnimationFrame,
         _cancelAnimationFrame;
+    if (typeof global !== 'undefined') {
+        _requestAnimationFrame = global.requestAnimationFrame || global.webkitRequestAnimationFrame
+                                      || global.mozRequestAnimationFrame || global.msRequestAnimationFrame
+                                      || function(callback){ global.setTimeout(function() { callback(Common.now()); }, 1000 / 60); };
 
-    if (typeof window !== 'undefined') {
-        _requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame
-                                      || window.mozRequestAnimationFrame || window.msRequestAnimationFrame
-                                      || function(callback){ window.setTimeout(function() { callback(Common.now()); }, 1000 / 60); };
-
-        _cancelAnimationFrame = window.cancelAnimationFrame || window.mozCancelAnimationFrame
-                                      || window.webkitCancelAnimationFrame || window.msCancelAnimationFrame;
+        _cancelAnimationFrame = global.cancelAnimationFrame || global.mozCancelAnimationFrame
+                                      || global.webkitCancelAnimationFrame || global.msCancelAnimationFrame;
     }
 
     /**
@@ -44,14 +43,13 @@ var Mouse = require('../core/Mouse');
         var defaults = {
             controller: Render,
             engine: null,
-            element: null,
-            canvas: null,
+            pageContext: null,
+            canvasId: null,
             mouse: null,
             frameRequestId: null,
             options: {
                 width: 800,
                 height: 600,
-                pixelRatio: 1,
                 background: '#18181d',
                 wireframeBackground: '#0f0f13',
                 hasBounds: !!options.bounds,
@@ -75,18 +73,27 @@ var Mouse = require('../core/Mouse');
                 showMousePosition: false
             }
         };
-
         var render = Common.extend(defaults, options);
-
-        if (render.canvas) {
-            render.canvas.width = render.options.width || render.canvas.width;
-            render.canvas.height = render.options.height || render.canvas.height;
+        !render.pageContext && (render.pageContext = swan);
+        if (!render.canvasId) {
+            throw new Error('Render.create: options.canvasId was undefined');
+            return;
         }
-
+        const selectorQuery = render.pageContext.createSelectorQuery().in(render.pageContext);
+        let canvasNodeRef = selectorQuery.select(`#${render.canvasId}`);
+        canvasNodeRef.boundingClientRect(rect => {
+            render.canvas = {
+                width: rect.width,
+                height: rect.height
+            };
+        }).exec();
+        render.canvas = {
+            width: 414,
+            height: 736
+        };
         render.mouse = options.mouse;
         render.engine = options.engine;
-        render.canvas = render.canvas || _createCanvas(render.options.width, render.options.height);
-        render.context = render.canvas.getContext('2d');
+        render.context = render.pageContext.createCanvasContext(render.canvasId);
         render.textures = {};
 
         render.bounds = render.bounds || {
@@ -99,16 +106,6 @@ var Mouse = require('../core/Mouse');
                 y: render.canvas.height
             }
         };
-
-        if (render.options.pixelRatio !== 1) {
-            Render.setPixelRatio(render, render.options.pixelRatio);
-        }
-
-        if (Common.isElement(render.element)) {
-            render.element.appendChild(render.canvas);
-        } else if (!render.canvas.parentNode) {
-            Common.log('Render.create: options.element was undefined, render.canvas was created but not appended', 'warn');
-        }
 
         return render;
     };
@@ -132,29 +129,6 @@ var Mouse = require('../core/Mouse');
      */
     Render.stop = function(render) {
         _cancelAnimationFrame(render.frameRequestId);
-    };
-
-    /**
-     * Sets the pixel ratio of the renderer and updates the canvas.
-     * To automatically detect the correct ratio, pass the string `'auto'` for `pixelRatio`.
-     * @method setPixelRatio
-     * @param {render} render
-     * @param {number} pixelRatio
-     */
-    Render.setPixelRatio = function(render, pixelRatio) {
-        var options = render.options,
-            canvas = render.canvas;
-
-        if (pixelRatio === 'auto') {
-            pixelRatio = _getPixelRatio(canvas);
-        }
-
-        options.pixelRatio = pixelRatio;
-        canvas.setAttribute('data-pixel-ratio', pixelRatio);
-        canvas.width = options.width * pixelRatio;
-        canvas.height = options.height * pixelRatio;
-        canvas.style.width = options.width + 'px';
-        canvas.style.height = options.height + 'px';
     };
 
     /**
@@ -267,10 +241,10 @@ var Mouse = require('../core/Mouse');
             boundsScaleY = boundsHeight / render.options.height;
 
         render.context.setTransform(
-            render.options.pixelRatio / boundsScaleX, 0, 0, 
+            render.options.pixelRatio / boundsScaleX, 0, 0,
             render.options.pixelRatio / boundsScaleY, 0, 0
         );
-        
+
         render.context.translate(-render.bounds.min.x, -render.bounds.min.y);
     };
 
@@ -1329,31 +1303,14 @@ var Mouse = require('../core/Mouse');
      * @param {} height
      * @return canvas
      */
-    var _createCanvas = function(width, height) {
-        var canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        canvas.oncontextmenu = function() { return false; };
-        canvas.onselectstart = function() { return false; };
-        return canvas;
-    };
-
-    /**
-     * Gets the pixel ratio of the canvas.
-     * @method _getPixelRatio
-     * @private
-     * @param {HTMLElement} canvas
-     * @return {Number} pixel ratio
-     */
-    var _getPixelRatio = function(canvas) {
-        var context = canvas.getContext('2d'),
-            devicePixelRatio = window.devicePixelRatio || 1,
-            backingStorePixelRatio = context.webkitBackingStorePixelRatio || context.mozBackingStorePixelRatio
-                                      || context.msBackingStorePixelRatio || context.oBackingStorePixelRatio
-                                      || context.backingStorePixelRatio || 1;
-
-        return devicePixelRatio / backingStorePixelRatio;
-    };
+    // var _createCanvas = function(width, height) {
+    //     var canvas = document.createElement('canvas');
+    //     canvas.width = width;
+    //     canvas.height = height;
+    //     canvas.oncontextmenu = function() { return false; };
+    //     canvas.onselectstart = function() { return false; };
+    //     return canvas;
+    // };
 
     /**
      * Gets the requested texture (an Image) via its path
@@ -1385,11 +1342,12 @@ var Mouse = require('../core/Mouse');
     var _applyBackground = function(render, background) {
         var cssBackground = background;
 
-        if (/(jpg|gif|png)$/.test(background))
-            cssBackground = 'url(' + background + ')';
-
-        render.canvas.style.background = cssBackground;
-        render.canvas.style.backgroundSize = "contain";
+        if (/(jpg|gif|png)$/.test(background)) {
+            Common.log('暂不支持图片背景');
+        } else {
+            render.context.fillStyle = background;
+            render.context.fillRect(0, 0, render.canvas.width, render.canvas.height);
+        }
         render.currentBackground = background;
     };
 

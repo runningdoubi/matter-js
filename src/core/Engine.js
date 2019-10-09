@@ -35,15 +35,15 @@ var Body = require('../body/Body');
      * @param {object} [options]
      * @return {engine} engine
      */
-    Engine.create = function(element, options) {
+    Engine.create = function(element = null, options = {}) {
         // options may be passed as the first (and only) argument
-        options = Common.isElement(element) ? options : element;
-        element = Common.isElement(element) ? element : null;
-        options = options || {};
+        // options = Common.isElement(element) ? options : element;
+        // element = Common.isElement(element) ? element : null;
+        // options = options || {};
 
-        if (element || options.render) {
-            Common.warn('Engine.create: engine.render is deprecated (see docs)');
-        }
+        // if (element || options.render) {
+        //     Common.warn('Engine.create: engine.render is deprecated (see docs)');
+        // }
 
         var defaults = {
             positionIterations: 6,
@@ -69,7 +69,7 @@ var Body = require('../body/Body');
                 element: element,
                 controller: Render
             };
-            
+
             engine.render = Common.extend(renderDefaults, engine.render);
         }
 
@@ -231,7 +231,7 @@ var Body = require('../body/Body');
 
         return engine;
     };
-    
+
     /**
      * Merges two engines by keeping the configuration of `engineA` but replacing the world with the one from `engineB`.
      * @method merge
@@ -240,7 +240,7 @@ var Body = require('../body/Body');
      */
     Engine.merge = function(engineA, engineB) {
         Common.extend(engineA, engineB);
-        
+
         if (engineB.world) {
             engineA.world = engineB.world;
 
@@ -263,7 +263,7 @@ var Body = require('../body/Body');
      */
     Engine.clear = function(engine) {
         var world = engine.world;
-        
+
         Pairs.clear(engine.pairs);
 
         var broadphase = engine.broadphase;
@@ -304,7 +304,7 @@ var Body = require('../body/Body');
         if ((gravity.x === 0 && gravity.y === 0) || gravityScale === 0) {
             return;
         }
-        
+
         for (var i = 0; i < bodies.length; i++) {
             var body = bodies[i];
 
@@ -322,10 +322,10 @@ var Body = require('../body/Body');
      * @method _bodiesUpdate
      * @private
      * @param {body[]} bodies
-     * @param {number} deltaTime 
+     * @param {number} deltaTime
      * The amount of time elapsed between updates
      * @param {number} timeScale
-     * @param {number} correction 
+     * @param {number} correction
      * The Verlet correction factor (deltaTime / lastDeltaTime)
      * @param {bounds} worldBounds
      */
@@ -443,7 +443,7 @@ var Body = require('../body/Body');
      */
 
     /**
-     * An `Object` containing properties regarding the timing systems of the engine. 
+     * An `Object` containing properties regarding the timing systems of the engine.
      *
      * @property timing
      * @type object
@@ -461,8 +461,8 @@ var Body = require('../body/Body');
      */
 
     /**
-     * A `Number` that specifies the current simulation-time in milliseconds starting from `0`. 
-     * It is incremented on every `Engine.update` by the given `delta` argument. 
+     * A `Number` that specifies the current simulation-time in milliseconds starting from `0`.
+     * It is incremented on every `Engine.update` by the given `delta` argument.
      *
      * @property timing.timestamp
      * @type number
