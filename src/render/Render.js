@@ -79,17 +79,9 @@ var Mouse = require('../core/Mouse');
             throw new Error('Render.create: options.canvasId was undefined');
             return;
         }
-        const selectorQuery = render.pageContext.createSelectorQuery().in(render.pageContext);
-        let canvasNodeRef = selectorQuery.select(`#${render.canvasId}`);
-        canvasNodeRef.boundingClientRect(rect => {
-            render.canvas = {
-                width: rect.width,
-                height: rect.height
-            };
-        }).exec();
         render.canvas = {
-            width: 414,
-            height: 736
+            width: render.options.width,
+            height: render.options.height
         };
         render.mouse = options.mouse;
         render.engine = options.engine;
@@ -242,10 +234,10 @@ var Mouse = require('../core/Mouse');
 
         render.context.setTransform(
             render.options.pixelRatio / boundsScaleX, 0, 0,
-            render.options.pixelRatio / boundsScaleY, 0, 0
+            render.options.pixelRatio / boundsScaleY,
+            -render.bounds.min.x,
+            -render.bounds.min.y
         );
-
-        render.context.translate(-render.bounds.min.x, -render.bounds.min.y);
     };
 
     /**
@@ -281,16 +273,13 @@ var Mouse = require('../core/Mouse');
         };
 
         Events.trigger(render, 'beforeRender', event);
-
         // apply background if it has changed
-        if (render.currentBackground !== background)
+        if (render.currentBackground !== background) {
             _applyBackground(render, background);
-
+        }
         // clear the canvas with a transparent fill, to allow the canvas background to show
-        context.globalCompositeOperation = 'source-in';
-        context.fillStyle = "transparent";
+        context.setFillStyle('#ffffff');
         context.fillRect(0, 0, canvas.width, canvas.height);
-        context.globalCompositeOperation = 'source-over';
 
         // handle bounds
         if (options.hasBounds) {
@@ -335,7 +324,7 @@ var Mouse = require('../core/Mouse');
             constraints = allConstraints;
             bodies = allBodies;
 
-            if (render.options.pixelRatio !== 1) {
+            if (render.options.pixelRatio && render.options.pixelRatio !== 1) {
                 render.context.setTransform(render.options.pixelRatio, 0, 0, render.options.pixelRatio, 0, 0);
             }
         }
@@ -390,7 +379,7 @@ var Mouse = require('../core/Mouse');
             // revert view transforms
             Render.endViewTransform(render);
         }
-
+        context.draw();
         Events.trigger(render, 'afterRender', event);
     };
 
@@ -447,9 +436,9 @@ var Mouse = require('../core/Mouse');
             c.font = "12px Arial";
 
             if (options.wireframes) {
-                c.fillStyle = 'rgba(255,255,255,0.5)';
+                c.setFillStyle('#ffffff');
             } else {
-                c.fillStyle = 'rgba(0,0,0,0.5)';
+                c.setFillStyle('#000000');
             }
 
             var split = render.debugString.split('\n');
@@ -521,13 +510,13 @@ var Mouse = require('../core/Mouse');
             }
 
             if (constraint.render.lineWidth) {
-                c.lineWidth = constraint.render.lineWidth;
-                c.strokeStyle = constraint.render.strokeStyle;
+                c.setLineWidth(constraint.render.lineWidth);
+                c.setStrokeStyle(constraint.render.strokeStyle);
                 c.stroke();
             }
 
             if (constraint.render.anchors) {
-                c.fillStyle = constraint.render.strokeStyle;
+                c.setFillStyle(constraint.render.strokeStyle);
                 c.beginPath();
                 c.arc(start.x, start.y, 3, 0, 2 * Math.PI);
                 c.arc(end.x, end.y, 3, 0, 2 * Math.PI);
@@ -668,18 +657,18 @@ var Mouse = require('../core/Mouse');
                     }
 
                     if (!options.wireframes) {
-                        c.fillStyle = part.render.fillStyle;
+                        c.setFillStyle(part.render.fillStyle);
 
                         if (part.render.lineWidth) {
-                            c.lineWidth = part.render.lineWidth;
-                            c.strokeStyle = part.render.strokeStyle;
+                            c.setLineWidth(part.render.lineWidth);
+                            c.setStrokeStyle(part.render.strokeStyle);
                             c.stroke();
                         }
 
                         c.fill();
                     } else {
-                        c.lineWidth = 1;
-                        c.strokeStyle = '#bbb';
+                        c.setLineWidth(1);
+                        c.setStrokeStyle('#bbb');
                         c.stroke();
                     }
                 }
@@ -737,8 +726,8 @@ var Mouse = require('../core/Mouse');
             }
         }
 
-        c.lineWidth = 1;
-        c.strokeStyle = '#bbb';
+        c.setLineWidth(1);
+        c.setStrokeStyle('#bbb')
         c.stroke();
     };
 
@@ -776,8 +765,8 @@ var Mouse = require('../core/Mouse');
             c.lineTo(body.vertices[0].x, body.vertices[0].y);
         }
 
-        c.lineWidth = 1;
-        c.strokeStyle = 'rgba(255,255,255,0.2)';
+        c.setLineWidth(1);
+        c.setStrokeStyle('#ffffff');
         c.stroke();
     };
 
@@ -800,7 +789,7 @@ var Mouse = require('../core/Mouse');
             for (k = parts.length > 1 ? 1 : 0; k < parts.length; k++) {
                 var part = parts[k];
                 for (j = 0; j < part.vertices.length; j++) {
-                    c.fillStyle = 'rgba(255,255,255,0.2)';
+                    c.setFillStyle('#ffffff');
                     c.fillText(i + '_' + j, part.position.x + (part.vertices[j].x - part.position.x) * 0.8, part.position.y + (part.vertices[j].y - part.position.y) * 0.8);
                 }
             }
@@ -817,7 +806,7 @@ var Mouse = require('../core/Mouse');
      */
     Render.mousePosition = function(render, mouse, context) {
         var c = context;
-        c.fillStyle = 'rgba(255,255,255,0.8)';
+        c.setFillStyle('#ffffff');
         c.fillText(mouse.position.x + '  ' + mouse.position.y, mouse.position.x + 5, mouse.position.y - 5);
     };
 
@@ -849,12 +838,12 @@ var Mouse = require('../core/Mouse');
         }
 
         if (options.wireframes) {
-            c.strokeStyle = 'rgba(255,255,255,0.08)';
+            c.setStrokeStyle('#ffffff');
         } else {
-            c.strokeStyle = 'rgba(0,0,0,0.1)';
+            c.setStrokeStyle('#000000');
         }
 
-        c.lineWidth = 1;
+        c.setLineWidth(1);
         c.stroke();
     };
 
@@ -908,12 +897,12 @@ var Mouse = require('../core/Mouse');
         }
 
         if (options.wireframes) {
-            c.strokeStyle = 'indianred';
-            c.lineWidth = 1;
+            c.setStrokeStyle('#cd5c5c');
+            c.setLineWidth(1);
         } else {
-            c.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+            c.setStrokeStyle('#ffffff');
             c.globalCompositeOperation = 'overlay';
-            c.lineWidth = 2;
+            c.setLineWidth(2);
         }
 
         c.stroke();
@@ -955,9 +944,9 @@ var Mouse = require('../core/Mouse');
         }
 
         if (options.wireframes) {
-            c.fillStyle = 'indianred';
+            c.setFillStyle('#cd5c5c');
         } else {
-            c.fillStyle = 'rgba(0,0,0,0.5)';
+            c.setFillStyle('#000000');
         }
         c.fill();
 
@@ -971,8 +960,7 @@ var Mouse = require('../core/Mouse');
                 c.closePath();
             }
         }
-
-        c.fillStyle = 'rgba(255,165,0,0.8)';
+        c.setFillStyle('#ffa500');
         c.fill();
     };
 
@@ -999,8 +987,8 @@ var Mouse = require('../core/Mouse');
             c.lineTo(body.position.x + (body.position.x - body.positionPrev.x) * 2, body.position.y + (body.position.y - body.positionPrev.y) * 2);
         }
 
-        c.lineWidth = 3;
-        c.strokeStyle = 'cornflowerblue';
+        c.setLineWidth(3);
+        c.setStrokeStyle('#6495ed');
         c.stroke();
     };
 
@@ -1025,7 +1013,7 @@ var Mouse = require('../core/Mouse');
             for (j = parts.length > 1 ? 1 : 0; j < parts.length; j++) {
                 var part = parts[j];
                 c.font = "12px Arial";
-                c.fillStyle = 'rgba(255,255,255,0.5)';
+                c.setFillStyle('#ffffff');
                 c.fillText(part.id, part.position.x + 10, part.position.y - 10);
             }
         }
@@ -1068,9 +1056,9 @@ var Mouse = require('../core/Mouse');
         }
 
         if (options.wireframes) {
-            c.fillStyle = 'rgba(255,255,255,0.7)';
+            c.setFillStyle('#ffffff');
         } else {
-            c.fillStyle = 'orange';
+            c.setFillStyle('#ffa500');
         }
         c.fill();
 
@@ -1104,13 +1092,9 @@ var Mouse = require('../core/Mouse');
             }
         }
 
-        if (options.wireframes) {
-            c.strokeStyle = 'rgba(255,165,0,0.7)';
-        } else {
-            c.strokeStyle = 'orange';
-        }
+        c.setStrokeStyle('#ffa500');
 
-        c.lineWidth = 1;
+        c.setLineWidth(1);
         c.stroke();
     };
 
@@ -1163,11 +1147,7 @@ var Mouse = require('../core/Mouse');
             c.lineTo(bodyA.position.x + collision.penetration.x * k, bodyA.position.y + collision.penetration.y * k);
         }
 
-        if (options.wireframes) {
-            c.strokeStyle = 'rgba(255,165,0,0.5)';
-        } else {
-            c.strokeStyle = 'orange';
-        }
+        c.setStrokeStyle('#ffa500');
         c.stroke();
     };
 
@@ -1183,11 +1163,7 @@ var Mouse = require('../core/Mouse');
         var c = context,
             options = render.options;
 
-        if (options.wireframes) {
-            c.strokeStyle = 'rgba(255,180,0,0.1)';
-        } else {
-            c.strokeStyle = 'rgba(255,180,0,0.5)';
-        }
+        c.setStrokeStyle('#ffb400');
 
         c.beginPath();
 
@@ -1206,7 +1182,7 @@ var Mouse = require('../core/Mouse');
                 grid.bucketHeight);
         }
 
-        c.lineWidth = 1;
+        c.setLineWidth(1);
         c.stroke();
     };
 
@@ -1238,8 +1214,8 @@ var Mouse = require('../core/Mouse');
             var item = selected[i].data;
 
             context.translate(0.5, 0.5);
-            context.lineWidth = 1;
-            context.strokeStyle = 'rgba(255,165,0,0.9)';
+            context.setLineWidth(1);
+            context.setStrokeStyle('#ffa500');
             context.setLineDash([1,2]);
 
             switch (item.type) {
@@ -1278,9 +1254,9 @@ var Mouse = require('../core/Mouse');
         // render selection region
         if (inspector.selectStart !== null) {
             context.translate(0.5, 0.5);
-            context.lineWidth = 1;
-            context.strokeStyle = 'rgba(255,165,0,0.6)';
-            context.fillStyle = 'rgba(255,165,0,0.1)';
+            context.setLineWidth(1);
+            context.setStrokeStyle('#ffa550');
+            context.setFillStyle('#ffa500');
             bounds = inspector.selectBounds;
             context.beginPath();
             context.rect(Math.floor(bounds.min.x), Math.floor(bounds.min.y),
@@ -1345,7 +1321,7 @@ var Mouse = require('../core/Mouse');
         if (/(jpg|gif|png)$/.test(background)) {
             Common.log('暂不支持图片背景');
         } else {
-            render.context.fillStyle = background;
+            render.context.setFillStyle(background);
             render.context.fillRect(0, 0, render.canvas.width, render.canvas.height);
         }
         render.currentBackground = background;

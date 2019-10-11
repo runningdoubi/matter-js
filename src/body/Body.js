@@ -99,7 +99,6 @@ var Axes = require('../geometry/Axes');
         };
 
         var body = Common.extend(defaults, options);
-
         _initProperties(body, options);
 
         return body;
