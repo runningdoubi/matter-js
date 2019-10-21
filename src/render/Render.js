@@ -74,34 +74,54 @@ var Mouse = require('../core/Mouse');
             }
         };
         var render = Common.extend(defaults, options);
-        !render.pageContext && (render.pageContext = swan);
         if (!render.canvasId) {
             throw new Error('Render.create: options.canvasId was undefined');
             return;
         }
-        render.canvas = {
-            width: render.options.width,
-            height: render.options.height
-        };
-        render.mouse = options.mouse;
-        render.engine = options.engine;
-        render.context = render.pageContext.createCanvasContext(render.canvasId);
-        render.textures = {};
+        return new Promise((resolve, reject) => {
+            _getElementBoundingClientRect(render.canvasId, render.pageContext, function(rect) {
+                render.canvas = {
+                    width: rect.width,
+                    height: rect.height
+                };
+                render.mouse = options.mouse;
+                render.engine = options.engine;
+                render.context = swan.createCanvasContext(render.canvasId);
+                render.textures = {};
 
-        render.bounds = render.bounds || {
-            min: {
-                x: 0,
-                y: 0
-            },
-            max: {
-                x: render.canvas.width,
-                y: render.canvas.height
-            }
-        };
+                render.bounds = render.bounds || {
+                    min: {
+                        x: 0,
+                        y: 0
+                    },
+                    max: {
+                        x: render.canvas.width,
+                        y: render.canvas.height
+                    }
+                };
 
-        return render;
+                resolve(render);
+            });
+        });
     };
 
+    /**
+    * get ElementBoundingClientRect in swan
+    * @param {string} id element id
+    * @param {object} pageContext
+    * @param {function} cb
+    */
+    var _getElementBoundingClientRect = function (id, pageContext, cb) {
+        if (!cb || typeof cb !== 'function') {
+            throw new Error('[matter-js]Render.js: cb is not a function');
+            return;
+        }
+        let selectorQuery = pageContext ? swan.createSelectorQuery().in(pageContext) : swan.createSelectorQuery();
+        let nodeRef = selectorQuery.select('#' + id);
+        nodeRef.boundingClientRect(rect => {
+            cb && cb(rect);
+        }).exec();
+    }
     /**
      * Continuously updates the render canvas on the `requestAnimationFrame` event.
      * @method run
