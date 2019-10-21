@@ -46,11 +46,11 @@ var Bounds = require('../geometry/Bounds');
             }
         }
 
-        var constraint = Constraint.create({ 
+        var constraint = Constraint.create({
             label: 'Mouse Constraint',
             pointA: mouse.position,
             pointB: { x: 0, y: 0 },
-            length: 0.01, 
+            length: 0.01,
             stiffness: 0.1,
             angularStiffness: 1,
             render: {
@@ -99,7 +99,7 @@ var Bounds = require('../geometry/Bounds');
             if (!constraint.bodyB) {
                 for (var i = 0; i < bodies.length; i++) {
                     body = bodies[i];
-                    if (Bounds.contains(body.bounds, mouse.position) 
+                    if (Bounds.contains(body.bounds, mouse.position)
                             && Detector.canCollide(body.collisionFilter, mouseConstraint.collisionFilter)) {
                         for (var j = body.parts.length > 1 ? 1 : 0; j < body.parts.length; j++) {
                             var part = body.parts[j];

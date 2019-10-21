@@ -1,5 +1,5 @@
 /*!
- * matter 0.14.2 by @liabru 2019-10-11
+ * matter 0.14.2 by @liabru 2019-10-21
  *     http://brm.io/matter-js/
  *     License MIT
  */
@@ -4540,15 +4540,14 @@ var Mouse = __webpack_require__(14);
         var event = {
             timestamp: engine.timing.timestamp
         };
-
         Events.trigger(render, 'beforeRender', event);
         // apply background if it has changed
         if (render.currentBackground !== background) {
             _applyBackground(render, background);
         }
         // clear the canvas with a transparent fill, to allow the canvas background to show
-        context.setFillStyle('#ffffff');
-        context.fillRect(0, 0, canvas.width, canvas.height);
+        // context.setFillStyle('#ffffff');
+        // context.fillRect(0, 0, canvas.width, canvas.height);
 
         // handle bounds
         if (options.hasBounds) {
@@ -6453,26 +6452,19 @@ var Common = __webpack_require__(0);
     /**
      * Creates a mouse input.
      * @method create
-     * @param {HTMLElement} element
      * @return {mouse} A new mouse
      */
-    Mouse.create = function(element) {
+    Mouse.create = function() {
         var mouse = {};
 
-        if (!element) {
-            Common.log('Mouse.create: element was undefined, defaulting to document.body', 'warn');
-        }
-
-        mouse.element = element || document.body;
         mouse.absolute = { x: 0, y: 0 };
         mouse.position = { x: 0, y: 0 };
         mouse.mousedownPosition = { x: 0, y: 0 };
         mouse.mouseupPosition = { x: 0, y: 0 };
         mouse.offset = { x: 0, y: 0 };
         mouse.scale = { x: 1, y: 1 };
-        mouse.wheelDelta = 0;
         mouse.button = -1;
-        mouse.pixelRatio = parseInt(mouse.element.getAttribute('data-pixel-ratio'), 10) || 1;
+        mouse.pixelRatio = 1;
 
         mouse.sourceEvents = {
             mousemove: null,
@@ -6481,29 +6473,12 @@ var Common = __webpack_require__(0);
             mousewheel: null
         };
 
-        mouse.mousemove = function(event) {
-            var position = Mouse._getRelativeMousePosition(event, mouse.element, mouse.pixelRatio),
+        mouse.touchstart = function(event) {
+            var position = Mouse._getRelativeMousePosition(event),
                 touches = event.changedTouches;
 
             if (touches) {
                 mouse.button = 0;
-                event.preventDefault();
-            }
-
-            mouse.absolute.x = position.x;
-            mouse.absolute.y = position.y;
-            mouse.position.x = mouse.absolute.x * mouse.scale.x + mouse.offset.x;
-            mouse.position.y = mouse.absolute.y * mouse.scale.y + mouse.offset.y;
-            mouse.sourceEvents.mousemove = event;
-        };
-
-        mouse.mousedown = function(event) {
-            var position = Mouse._getRelativeMousePosition(event, mouse.element, mouse.pixelRatio),
-                touches = event.changedTouches;
-
-            if (touches) {
-                mouse.button = 0;
-                event.preventDefault();
             } else {
                 mouse.button = event.button;
             }
@@ -6517,13 +6492,24 @@ var Common = __webpack_require__(0);
             mouse.sourceEvents.mousedown = event;
         };
 
-        mouse.mouseup = function(event) {
-            var position = Mouse._getRelativeMousePosition(event, mouse.element, mouse.pixelRatio),
+        mouse.touchmove = function(event) {
+            var position = Mouse._getRelativeMousePosition(event),
                 touches = event.changedTouches;
 
             if (touches) {
-                event.preventDefault();
+                mouse.button = 0;
             }
+
+            mouse.absolute.x = position.x;
+            mouse.absolute.y = position.y;
+            mouse.position.x = mouse.absolute.x * mouse.scale.x + mouse.offset.x;
+            mouse.position.y = mouse.absolute.y * mouse.scale.y + mouse.offset.y;
+            mouse.sourceEvents.mousemove = event;
+        };
+
+        mouse.touchend = function(event) {
+            var position = Mouse._getRelativeMousePosition(event),
+                touches = event.changedTouches;
 
             mouse.button = -1;
             mouse.absolute.x = position.x;
@@ -6535,35 +6521,7 @@ var Common = __webpack_require__(0);
             mouse.sourceEvents.mouseup = event;
         };
 
-        mouse.mousewheel = function(event) {
-            mouse.wheelDelta = Math.max(-1, Math.min(1, event.wheelDelta || -event.detail));
-            event.preventDefault();
-        };
-
-        Mouse.setElement(mouse, mouse.element);
-
         return mouse;
-    };
-
-    /**
-     * Sets the element the mouse is bound to (and relative to).
-     * @method setElement
-     * @param {mouse} mouse
-     * @param {HTMLElement} element
-     */
-    Mouse.setElement = function(mouse, element) {
-        mouse.element = element;
-
-        element.addEventListener('mousemove', mouse.mousemove);
-        element.addEventListener('mousedown', mouse.mousedown);
-        element.addEventListener('mouseup', mouse.mouseup);
-
-        element.addEventListener('mousewheel', mouse.mousewheel);
-        element.addEventListener('DOMMouseScroll', mouse.mousewheel);
-
-        element.addEventListener('touchmove', mouse.mousemove);
-        element.addEventListener('touchstart', mouse.mousedown);
-        element.addEventListener('touchend', mouse.mouseup);
     };
 
     /**
@@ -6575,8 +6533,6 @@ var Common = __webpack_require__(0);
         mouse.sourceEvents.mousemove = null;
         mouse.sourceEvents.mousedown = null;
         mouse.sourceEvents.mouseup = null;
-        mouse.sourceEvents.mousewheel = null;
-        mouse.wheelDelta = 0;
     };
 
     /**
@@ -6615,25 +6571,30 @@ var Common = __webpack_require__(0);
      * @return {}
      */
     Mouse._getRelativeMousePosition = function(event, element, pixelRatio) {
-        var elementBounds = element.getBoundingClientRect(),
-            rootNode = (document.documentElement || document.body.parentNode || document.body),
-            scrollX = (window.pageXOffset !== undefined) ? window.pageXOffset : rootNode.scrollLeft,
-            scrollY = (window.pageYOffset !== undefined) ? window.pageYOffset : rootNode.scrollTop,
-            touches = event.changedTouches,
-            x, y;
+        // var elementBounds = element.getBoundingClientRect(),
+        //     rootNode = (document.documentElement || document.body.parentNode || document.body),
+        //     scrollX = (window.pageXOffset !== undefined) ? window.pageXOffset : rootNode.scrollLeft,
+        //     scrollY = (window.pageYOffset !== undefined) ? window.pageYOffset : rootNode.scrollTop,
+        //     touches = event.changedTouches,
+        //     x, y;
 
-        if (touches) {
-            x = touches[0].pageX - elementBounds.left - scrollX;
-            y = touches[0].pageY - elementBounds.top - scrollY;
-        } else {
-            x = event.pageX - elementBounds.left - scrollX;
-            y = event.pageY - elementBounds.top - scrollY;
-        }
+        // if (touches) {
+        //     x = touches[0].pageX - elementBounds.left - scrollX;
+        //     y = touches[0].pageY - elementBounds.top - scrollY;
+        // } else {
+        //     x = event.pageX - elementBounds.left - scrollX;
+        //     y = event.pageY - elementBounds.top - scrollY;
+        // }
 
+        // return {
+        //     x: x / (element.clientWidth / (element.width || element.clientWidth) * pixelRatio),
+        //     y: y / (element.clientHeight / (element.height || element.clientHeight) * pixelRatio)
+        // };
+        let touches = event.changedTouches;
         return {
-            x: x / (element.clientWidth / (element.width || element.clientWidth) * pixelRatio),
-            y: y / (element.clientHeight / (element.height || element.clientHeight) * pixelRatio)
-        };
+            x: touches[0].x,
+            y: touches[0].y
+        }
     };
 
 })();

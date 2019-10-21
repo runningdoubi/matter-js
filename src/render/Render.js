@@ -271,15 +271,14 @@ var Mouse = require('../core/Mouse');
         var event = {
             timestamp: engine.timing.timestamp
         };
-
         Events.trigger(render, 'beforeRender', event);
         // apply background if it has changed
         if (render.currentBackground !== background) {
             _applyBackground(render, background);
         }
         // clear the canvas with a transparent fill, to allow the canvas background to show
-        context.setFillStyle('#ffffff');
-        context.fillRect(0, 0, canvas.width, canvas.height);
+        // context.setFillStyle('#ffffff');
+        // context.fillRect(0, 0, canvas.width, canvas.height);
 
         // handle bounds
         if (options.hasBounds) {
