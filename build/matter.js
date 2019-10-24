@@ -1,5 +1,5 @@
 /*!
- * matter 0.14.2 by @liabru 2019-10-21
+ * matter 0.14.2 by @liabru 2019-10-24
  *     http://brm.io/matter-js/
  *     License MIT
  */
@@ -4306,7 +4306,7 @@ var Mouse = __webpack_require__(14);
      * See the properties section below for detailed information on what you can pass via the `options` object.
      * @method create
      * @param {object} [options]
-     * @return {render} A new renderer
+     * @return {Promise} A promise
      */
     Render.create = function(options) {
         var defaults = {
@@ -4562,9 +4562,9 @@ var Mouse = __webpack_require__(14);
         };
         Events.trigger(render, 'beforeRender', event);
         // apply background if it has changed
-        if (render.currentBackground !== background) {
+        // if (render.currentBackground !== background) {
             _applyBackground(render, background);
-        }
+        // }
         // clear the canvas with a transparent fill, to allow the canvas background to show
         // context.setFillStyle('#ffffff');
         // context.fillRect(0, 0, canvas.width, canvas.height);
@@ -8091,7 +8091,7 @@ var Body = __webpack_require__(6);
      * @param {object} [options]
      * @return {engine} engine
      */
-    Engine.create = function(element = null, options = {}) {
+    Engine.create = function(options = {}) {
         // options may be passed as the first (and only) argument
         // options = Common.isElement(element) ? options : element;
         // element = Common.isElement(element) ? element : null;
@@ -8120,9 +8120,8 @@ var Body = __webpack_require__(6);
         var engine = Common.extend(defaults, options);
 
         // @deprecated
-        if (element || engine.render) {
+        if (engine.render) {
             var renderDefaults = {
-                element: element,
                 controller: Render
             };
 

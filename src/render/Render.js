@@ -37,7 +37,7 @@ var Mouse = require('../core/Mouse');
      * See the properties section below for detailed information on what you can pass via the `options` object.
      * @method create
      * @param {object} [options]
-     * @return {render} A new renderer
+     * @return {Promise} A promise
      */
     Render.create = function(options) {
         var defaults = {
@@ -293,9 +293,9 @@ var Mouse = require('../core/Mouse');
         };
         Events.trigger(render, 'beforeRender', event);
         // apply background if it has changed
-        if (render.currentBackground !== background) {
+        // if (render.currentBackground !== background) {
             _applyBackground(render, background);
-        }
+        // }
         // clear the canvas with a transparent fill, to allow the canvas background to show
         // context.setFillStyle('#ffffff');
         // context.fillRect(0, 0, canvas.width, canvas.height);

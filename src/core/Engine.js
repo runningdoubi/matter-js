@@ -35,7 +35,7 @@ var Body = require('../body/Body');
      * @param {object} [options]
      * @return {engine} engine
      */
-    Engine.create = function(element = null, options = {}) {
+    Engine.create = function(options = {}) {
         // options may be passed as the first (and only) argument
         // options = Common.isElement(element) ? options : element;
         // element = Common.isElement(element) ? element : null;
@@ -64,9 +64,8 @@ var Body = require('../body/Body');
         var engine = Common.extend(defaults, options);
 
         // @deprecated
-        if (element || engine.render) {
+        if (engine.render) {
             var renderDefaults = {
-                element: element,
                 controller: Render
             };
 
