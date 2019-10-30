@@ -1,5 +1,5 @@
 /*!
- * matter 0.14.2 by @liabru 2019-10-24
+ * matter 0.14.2 by @liabru 2019-10-30
  *     http://brm.io/matter-js/
  *     License MIT
  */
@@ -4324,7 +4324,7 @@ var Mouse = __webpack_require__(14);
                 hasBounds: !!options.bounds,
                 enabled: true,
                 wireframes: true,
-                showSleeping: true,
+                showSleeping: false,
                 showDebug: false,
                 showBroadphase: false,
                 showBounds: false,
@@ -4895,30 +4895,37 @@ var Mouse = __webpack_require__(14);
                     continue;
 
                 if (options.showSleeping && body.isSleeping) {
-                    c.globalAlpha = 0.5 * part.render.opacity;
+                    c.setGlobalAlpha(0.5 * part.render.opacity);
                 } else if (part.render.opacity !== 1) {
-                    c.globalAlpha = part.render.opacity;
+                    c.setGlobalAlpha(part.render.opacity);
                 }
-
-                if (part.render.sprite && part.render.sprite.texture && !options.wireframes) {
+                if (part.render.sprite && part.render.sprite.imgUrl && !options.wireframes) {
                     // part sprite
-                    var sprite = part.render.sprite,
-                        texture = _getTexture(render, sprite.texture);
+                    var sprite = part.render.sprite;
+                        // texture = _getTexture(render, sprite.texture);
 
                     c.translate(part.position.x, part.position.y);
                     c.rotate(part.angle);
 
                     c.drawImage(
-                        texture,
-                        texture.width * -sprite.xOffset * sprite.xScale,
-                        texture.height * -sprite.yOffset * sprite.yScale,
-                        texture.width * sprite.xScale,
-                        texture.height * sprite.yScale
+                        sprite.imgUrl,
+                        sprite.imgWidth * -sprite.xOffset * sprite.xScale,
+                        sprite.imgHeight * -sprite.yOffset * sprite.yScale,
+                        sprite.imgWidth * sprite.xScale,
+                        sprite.imgHeight * sprite.yScale
                     );
 
                     // revert translation, hopefully faster than save / restore
                     c.rotate(-part.angle);
                     c.translate(-part.position.x, -part.position.y);
+                } else if (part.render.content && part.render.content.text) {
+                    var content = part.render.content;
+                    content.fontColor && c.setFillStyle(content.fontColor);
+                    content.font && (c.font = content.font);
+                    c.setFontSize(+content.fontSize || 20);
+                    c.setTextAlign(content.textAlign || 'center');
+                    c.setTextBaseline(content.textBaseline || 'middle');
+                    c.fillText(content.text, part.position.x, part.position.y);
                 } else {
                     // part polygon
                     if (part.circleRadius) {
@@ -4961,7 +4968,7 @@ var Mouse = __webpack_require__(14);
                     }
                 }
 
-                c.globalAlpha = 1;
+                c.setGlobalAlpha(1);
             }
         }
     };
