@@ -2,6 +2,8 @@
 
 > *Matter.js* is a JavaScript 2D rigid body physics engine for the web
 
+> 这是为*百度小程序*的魔改版，使用的是小程序提供的[canvas API](https://smartprogram.baidu.com/docs/develop/api/show/canvas/)，由于小程序运行原理问题目前性能不理想，期待未来会更好
+
 [brm.io/matter-js](http://brm.io/matter-js/)
 
 [Demos](#demos) - [Gallery](#gallery) - [Features](#features) - [Plugins](#plugins) - [Install](#install) - [Usage](#usage) - [Examples](#examples) -  [Docs](#documentation) - [Wiki](https://github.com/liabru/matter-js/wiki) - [References](#references) - [License](#license)
